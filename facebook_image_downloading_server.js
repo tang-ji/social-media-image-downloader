@@ -59,7 +59,7 @@ async function downloadImages(params) {
 		}));
 		for (let i = images.length-1; i >= 0; i--) {
 			if (images[i]) {
-				result = await download(images[i], "downloads/facebook/" + crypto.createHash('md5').update(images[i]).digest('hex') + `.png`);
+				result = await download(images[i], "downloads/Instagram/" + crypto.createHash('md5').update(images[i]).digest('hex') + `.png`);
 			}
 		}
 		await browser.close();
