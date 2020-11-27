@@ -7,9 +7,9 @@ const crypto = require('crypto');
 
 async function run(){
 	http.createServer(async function (req, res) {
-		await downloadImages(req.url);
+		const buffer = await downloadImages(req.url);
 		await res.writeHead(200, {"Content-Type": "text/plain"});
-		await res.end("All images saved.");
+		await res.end(buffer);
 	}).listen(8889);
 }
 
@@ -37,18 +37,31 @@ const download = (url, destination) => new Promise((resolve, reject) => {
 	
 });
 
+function delay(time) {
+   return new Promise(function(resolve) { 
+       setTimeout(resolve, time)
+   });
+}
+
 async function downloadImages(params) {
 	if (!params) return 0;
 	let url = params.slice(6);
 	try {
 		const browser = await puppeteer.launch({
-        executablePath: "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+            executablePath: "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+//             headless: false,
         });
 		const page = await browser.newPage();
-		let result;
+        // Load Cookies
+        const fs = require('fs').promises;
+        const cookiesString = await fs.readFile('cookies.json');
+        await page.setCookie(...JSON.parse(cookiesString));
+        
+		
         await page.goto(String(url), {   
             waitUntil: 'networkidle0'
         });
+        
 		const images = await page.evaluate(() => Array.from(document.images, function(e) {
 			try {
 				if (e.width >= 300 && e.height >= 300) return e.src;
@@ -57,16 +70,30 @@ async function downloadImages(params) {
 			}
 			return null;
 		}));
-		for (let i = images.length-1; i >= 0; i--) {
+// 		for (let i = images.length-1; i >= 0; i--) {
+        let result = "";
+        let k = 0;
+        for (let i = 0; i < images.length; i++) {
 			if (images[i]) {
-				result = await download(images[i], "downloads/Instagram/" + crypto.createHash('md5').update(images[i]).digest('hex') + `.png`);
+                if(k > 1) {
+                    await browser.close();
+                    return result;
+                }
+                if(await download(images[i], "downloads/Facebook/" + crypto.createHash('md5').update(images[i]).digest('hex') + `.png`)) {
+                    k += 1;
+                    
+                    result +=  " Facebook/" + crypto.createHash('md5').update(images[i]).digest('hex') + `.png`;
+                }
+                
+                
+// 				
 			}
 		}
 		await browser.close();
+        return result;
 	} catch (err) {
 		console.log(err);
 	}
-
 }
 
 run();
