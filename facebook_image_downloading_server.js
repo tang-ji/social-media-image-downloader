@@ -70,9 +70,10 @@ async function downloadImages(params) {
 			}
 			return null;
 		}));
-// 		for (let i = images.length-1; i >= 0; i--) {
+
         let result = "";
         let k = 0;
+// 		for (let i = images.length-1; i >= 0; i--) {
         for (let i = 0; i < images.length; i++) {
 			if (images[i]) {
                 if(k > 1) {
